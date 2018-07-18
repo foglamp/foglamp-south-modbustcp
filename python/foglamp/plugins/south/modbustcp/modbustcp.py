@@ -49,7 +49,7 @@ __license__ = "Apache 2.0"
 __version__ = "${VERSION}"
 
 
-""" _DEFAULT_CONFIG with Modbus Entities  Map
+""" _DEFAULT_CONFIG with Modbus Entities Map
 
     The coils and registers each have a read-only table and read-write table.
 
@@ -62,18 +62,23 @@ __version__ = "${VERSION}"
 _DEFAULT_CONFIG = {
     'plugin': {
         'description': 'Python module name of the plugin to load',
-        'type':        'string',
-        'default':     'modbustcp'
+        'type': 'string',
+        'default': 'modbustcp'
     },
     'pollInterval': {
-        'description': 'The interval between poll calls to the device poll routine expressed in milliseconds.',
-        'type':        'integer',
-        'default':     '1000'
+        'description': 'The interval between poll calls to the device poll routine, expressed in milliseconds.',
+        'type': 'integer',
+        'default': '1000'
     },
-    'sourceIPAddress': {
+    'sourceIpAddress': {
         'description': 'The IP address of the Modbus TCP data source',
-        'type':        'string',
-        'default':     '127.0.0.1'
+        'type': 'string',
+        'default': '127.0.0.1'
+    },
+    'sourcePort': {
+        'description': 'The port of the Modbus TCP data source',
+        'type': 'integer',
+        'default': '502'
     },
     'entitiesMap' : {
         'description' : 'Modbus entities map',
@@ -145,22 +150,52 @@ def plugin_poll(handle):
     try:
         global mbus_client
         if mbus_client is None:
-            sourceIP = handle['sourceIPAddress']['value']
-            mbus_client = ModbusTcpClient(sourceIP)
+            sourceIP = handle['sourceIpAddress']['value']
+            try:
+                sourcePort = int(handle['sourcePort']['value'])
+            except:
+                raise ValueError
+            mbus_client = ModbusTcpClient(host=sourceIP, port=sourcePort)
             _LOGGER.info('Modbus TCP started on IP %s', sourceIP)
 
-        # TODO:read from the modbus coils, inputs, holding registers and input registers
-        # using the API's read coils, read discrete inputs, read holding registers and read input registers
-        # use modbus_map = handle['entitiesMap']['value'] dict to read
+        """ TODO: use modbus_map = handle['entitiesMap']['value'] dict to read
+        
+        read_coils(self, address, count=1, **kwargs)  
+        read_discrete_inputs(self, address, count=1, **kwargs)
+        read_holding_registers(self, address, count=1, **kwargs)
+        read_input_registers(self, address, count=1, **kwargs)
+        
+            - address: The starting address to read from
+            - count: The number of coils / discrete or registers to read
+            - unit: The slave unit this request is targeting
+            
+            On TCP/IP, the MODBUS server is addressed using its IP address; therefore, the MODBUS Unit Identifier is useless. 
+            The value 0xFF has to be used. When addressing a MODBUS server connected directly to a TCP/IP network, it’s 
+            recommended not using a significant MODBUS slave address in the "Unit Identifier" field.  
+            In the event of a re-allocation of the IP addresses within an automated system and if a IP address previously
+            assigned to a MODBUS server is then assigned to a gateway, using a significant slave address may cause trouble
+            because of a bad routing by the gateway. Using a non-significant slave address, the gateway will simply discard
+            the MODBUS PDU with no trouble. 0xFF is recommended for the "Unit Identifier" as non-significant value. 
+            
+            Remark : The value 0 is also accepted to communicate directly to a MODBUS TCP device.
+. 
+       
+        """
 
         # Specify which register number to monitor and how many registers to read
         registerNumber = 0
         numberOfRegistersToRead = 1
-        registerValue = (mbus_client.read_holding_registers(registerNumber, numberOfRegistersToRead, unit=1)).registers[0]
 
-        if registerValue is not None:
+        registerValues = mbus_client.read_holding_registers(registerNumber, numberOfRegistersToRead, unit=0)
+        registerVal = registerValues.registers[0]
+
+
+        if registerVal is not None:
             time_stamp = str(datetime.now(tz=timezone.utc))
-            readings =  {'Register Value': registerValue}
+
+            # FIX-ME
+            readings =  {'Register Value': registerVal }
+
             wrapper = {
                 'asset': 'Modbus TCP',
                 'timestamp': time_stamp,
@@ -191,7 +226,7 @@ def plugin_reconfigure(handle, new_config):
 
     diff = utils.get_diff(handle, new_config)
 
-    if 'sourceIPAddress' in diff or 'management_host' in diff:
+    if 'sourceIpAddress' in diff or 'sourcePort' in diff or 'management_host' in diff:
         plugin_shutdown(handle)
         new_handle = plugin_init(new_config)
         new_handle['restart'] = 'yes'
