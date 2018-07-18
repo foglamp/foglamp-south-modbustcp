@@ -27,29 +27,22 @@
 
 set -e
 
+install_deps () {
+    pip3 install -Ir /usr/local/foglamp/python/requirements-modbustcp.txt --no-cache-dir
+}
+
 set_files_ownership () {
     chown -R root:root /usr/local/foglamp/python/foglamp/plugins/south/modbustcp
 }
 
 add_service () {
-    output=$(curl -sX POST http://localhost:8081/foglamp/service -d '{"name": "modbustcp", "type": "south", "plugin": "modbustcp"}')
-    service_id=$(echo $output | awk -F '"id": ' '{print $2}' | awk -F \" '{print $2}')
-    echo $service_id
-}
-
-enable_service () {
-    service_id=$1
-    echo $service_id
-    output=$(curl -X PUT -d '{"enabled": true}' http://localhost:8081/foglamp/schedule/$service_id)
+    output=$(curl -sX POST http://localhost:8081/foglamp/service -d '{"name": "Modbus TCP", "type": "south", "plugin": "modbustcp", "enabled": true}')
     echo $output
 }
 
-install_pip3_packages () {
-    pip3 install pymodbus3
-}
 
-install_pip3_packages
+
+install_deps
 set_files_ownership
-SERVICE_ID=$(add_service)
-enable_service $SERVICE_ID
-echo "modbustcp plugin installed. Restart FogLAMP to enable the plugin."
+add_service
+echo "modbustcp plugin installed."

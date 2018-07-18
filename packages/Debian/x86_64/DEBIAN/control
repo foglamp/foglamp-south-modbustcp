@@ -1,5 +1,5 @@
 Package: foglamp-south-modbustcp
-Version: 0.0
+Version: 0.0.0
 Section: devel
 Priority: optional
 Architecture: amd64

@@ -33,12 +33,14 @@
 
     """
 
-from datetime import datetime, timezone
-from pymodbus3.client.sync import ModbusTcpClient
-import uuid
 import copy
+from datetime import datetime, timezone
+import uuid
+
+from pymodbus3.client.sync import ModbusTcpClient
 
 from foglamp.common import logger
+from foglamp.plugins.common import utils
 from foglamp.services.south import exceptions
 
 __author__ = "Dan Lopez"
@@ -57,8 +59,7 @@ _DEFAULT_CONFIG = {
         'type':        'integer',
         'default':     '1000'
     },
-    #'gpiopin': {
-    'sourceipaddress': {
+    'sourceIPAddress': {
         'description': 'The IP address of the Modbus TCP data source',
         'type':        'string',
         'default':     '127.0.0.1'
@@ -68,6 +69,8 @@ _DEFAULT_CONFIG = {
 
 _LOGGER = logger.setup(__name__)
 """ Setup the access to the logging system of FogLAMP """
+
+mbus_client = None
 
 def plugin_info():
     """ Returns information about the plugin.
@@ -80,7 +83,7 @@ def plugin_info():
 
     return {
         'name':      'Modbus TCP',
-        'version':   '1.0',
+        'version':   '1.3.0',
         'mode':      'poll',
         'type':      'south',
         'interface': '1.0',
@@ -97,56 +100,52 @@ def plugin_init(config):
         handle: JSON object to be used in future calls to the plugin
     Raises:
     """
-
-    #handle = config['gpiopin']['value']
-    # handle = config['sourceipaddress']['value']
     return copy.deepcopy(config)
 
 
 def plugin_poll(handle):
-    """ Extracts data from the sensor and returns it in a JSON document as a Python dict.
+    """ Extracts data from the device and returns it in a JSON document as a Python dict.
 
     Available for poll mode only.
 
     Args:
         handle: handle returned by the plugin initialisation call
     Returns:
-        returns a sensor reading in a JSON document, as a Python dict, if it is available
+        returns a reading in a JSON document, as a Python dict, if it is available
         None - If no reading is available
     Raises:
         DataRetrievalError
     """
 
     try:
-        #humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, handle)
-        # Open a new Modbus TCP client; in this case, the handle is already set to the source IP address
-        client = ModbusTcpClient(handle['sourceipaddress']['value'])
+        global mbus_client
+        if mbus_client is None:
+            sourceIP = handle['sourceIPAddress']['value']
+            mbus_client = ModbusTcpClient(sourceIP)
+            _LOGGER.info('Modbus TCP started on IP %s', sourceIP)
+
+        # TODO:read from the modbus coils, inputs, holding registers and input registers
+        # using the API's read coils, read discrete inputs, read holding registers and read input registers
+
         # Specify which register number to monitor and how many registers to read
         registerNumber = 0
         numberOfRegistersToRead = 1
-        registerValue = (client.read_holding_registers(registerNumber, numberOfRegistersToRead, unit=1)).registers[0]
-        #if humidity is not None and temperature is not None:
+        registerValue = (mbus_client.read_holding_registers(registerNumber, numberOfRegistersToRead, unit=1)).registers[0]
+
         if registerValue is not None:
             time_stamp = str(datetime.now(tz=timezone.utc))
-            #readings =  { 'temperature': temperature , 'humidity' : humidity }
-            readings =  { 'Register Value': registerValue }
+            readings =  {'Register Value': registerValue}
             wrapper = {
-                    #'asset':     'dht11',
-                    'asset':     'Modbus TCP Source',
-                    'timestamp': time_stamp,
-                    'key':       str(uuid.uuid4()),
-                    'readings':  readings
+                'asset': 'Modbus TCP',
+                'timestamp': time_stamp,
+                'key': str(uuid.uuid4()),
+                'readings': readings
             }
-            # Close the modbus client
-            client.close()
-            return wrapper
-        else:
-            return None
 
     except Exception as ex:
         raise exceptions.DataRetrievalError(ex)
-
-    return None
+    else:
+        return wrapper
 
 
 def plugin_reconfigure(handle, new_config):
@@ -162,8 +161,19 @@ def plugin_reconfigure(handle, new_config):
     Raises:
     """
 
-    #new_handle = new_config['gpiopin']['value']
-    new_handle = new_config['sourceipaddress']['value']
+    _LOGGER.info("Old config for Modbus TCP plugin {} \n new config {}".format(handle, new_config))
+
+    diff = utils.get_diff(handle, new_config)
+
+    if 'sourceIPAddress' in diff or 'management_host' in diff:
+        plugin_shutdown(handle)
+        new_handle = plugin_init(new_config)
+        new_handle['restart'] = 'yes'
+        _LOGGER.info("Restarting  Modbus TCP plugin due to change in configuration keys [{}]".format(', '.join(diff)))
+    else:
+        new_handle = copy.deepcopy(handle)
+        new_handle['restart'] = 'no'
+
     return new_handle
 
 
@@ -175,3 +185,12 @@ def plugin_shutdown(handle):
     Returns:
     Raises:
     """
+    try:
+        global mbus_client
+        if mbus_client is not None:
+            mbus_client.close()
+    except Exception as ex:
+        _LOGGER.exception('Error in shutting down Modbus TCP plugin; %s', ex)
+        raise
+    else:
+        _LOGGER.info('Modbus TCP plugin shut down.')
