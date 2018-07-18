@@ -48,6 +48,17 @@ __copyright__ = "Copyright (c) 2018 OSIsoft, LLC"
 __license__ = "Apache 2.0"
 __version__ = "${VERSION}"
 
+
+""" _DEFAULT_CONFIG with Modbus Entities  Map
+
+    The coils and registers each have a read-only table and read-write table.
+
+        Coil	Read-write	1 bit
+        Discrete input	Read-only	1 bit
+        Input register	Read-only	16 bits
+        Holding register	Read-write	16 bits 
+"""
+
 _DEFAULT_CONFIG = {
     'plugin': {
         'description': 'Python module name of the plugin to load',
@@ -63,9 +74,23 @@ _DEFAULT_CONFIG = {
         'description': 'The IP address of the Modbus TCP data source',
         'type':        'string',
         'default':     '127.0.0.1'
+    },
+    'entitiesMap' : {
+        'description' : 'Modbus entities map',
+        'type' : 'JSON',
+        'default' : {
+            'coils' : {},
+            'discreteInputs' : {},
+            'holdingRegisters' : {
+                "temperature" : 7,
+                "humidity" : 8
+            },
+            'inputRegisters' : {}
+        }
     }
-
 }
+
+
 
 _LOGGER = logger.setup(__name__)
 """ Setup the access to the logging system of FogLAMP """
@@ -126,6 +151,7 @@ def plugin_poll(handle):
 
         # TODO:read from the modbus coils, inputs, holding registers and input registers
         # using the API's read coils, read discrete inputs, read holding registers and read input registers
+        # use modbus_map = handle['entitiesMap']['value'] dict to read
 
         # Specify which register number to monitor and how many registers to read
         registerNumber = 0
