@@ -1,4 +1,10 @@
-""" 
+# -*- coding: utf-8 -*-
+
+# FOGLAMP_BEGIN
+# See: http://foglamp.readthedocs.io/
+# FOGLAMP_END
+
+"""
 # ***********************************************************************
 # * DISCLAIMER:
 # *
@@ -12,10 +18,10 @@
 # * AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY DISCLAIMED.
 # ************************************************************************
 """
+
 """ Plugin for reading data from a Modbus TCP data source
 
-    This plugin uses the pymodbus3 library, to install this perform
-    the following steps:
+    This plugin uses the pymodbus3 library, to install this perform the following steps:
 
         pip install pymodbus3
 
@@ -26,6 +32,7 @@
     As an example of how to use this library:
 
         from pymodbus3.client.sync import ModbusTcpClient
+        
         client = ModbusTcpClient('127.0.0.1')
         value = (client.read_holding_registers(0, 1, unit=1)).registers[0]
         print(value)
@@ -36,6 +43,7 @@
 import copy
 from datetime import datetime, timezone
 import uuid
+import json
 
 from pymodbus3.client.sync import ModbusTcpClient
 
@@ -80,27 +88,27 @@ _DEFAULT_CONFIG = {
         'type': 'integer',
         'default': '502'
     },
-    'entitiesMap' : {
-        'description' : 'Modbus entities map',
-        'type' : 'JSON',
-        'default' : {
-            'coils' : {},
-            'discreteInputs' : {},
-            'holdingRegisters' : {
-                "temperature" : 7,
-                "humidity" : 8
+    'entitiesMap': {
+        'description': 'Modbus entities map',
+        'type': 'JSON',
+        'default': json.dumps({
+            "coils": {},
+            "discreteInputs": {},
+            "holdingRegisters": {
+                "temperature": 7,
+                "humidity": 8
             },
-            'inputRegisters' : {}
-        }
+            "inputRegisters": {}
+        })
     }
 }
-
 
 
 _LOGGER = logger.setup(__name__)
 """ Setup the access to the logging system of FogLAMP """
 
 mbus_client = None
+
 
 def plugin_info():
     """ Returns information about the plugin.
@@ -112,12 +120,12 @@ def plugin_info():
     """
 
     return {
-        'name':      'Modbus TCP',
-        'version':   '1.3.0',
-        'mode':      'poll',
-        'type':      'south',
+        'name': 'Modbus TCP',
+        'version': '1.3.0',
+        'mode': 'poll',
+        'type': 'south',
         'interface': '1.0',
-        'config':    _DEFAULT_CONFIG
+        'config': _DEFAULT_CONFIG
     }
 
 
@@ -125,7 +133,7 @@ def plugin_init(config):
     """ Initialise the plugin.
 
     Args:
-        config: JSON configuration document for the device configuration category
+        config: JSON configuration document for the plugin configuration category
     Returns:
         handle: JSON object to be used in future calls to the plugin
     Raises:
@@ -134,7 +142,7 @@ def plugin_init(config):
 
 
 def plugin_poll(handle):
-    """ Extracts data from the device and returns it in a JSON document as a Python dict.
+    """ Extracts data from the modbus device and returns it in a JSON document as a Python dict.
 
     Available for poll mode only.
 
@@ -150,13 +158,13 @@ def plugin_poll(handle):
     try:
         global mbus_client
         if mbus_client is None:
-            sourceIP = handle['sourceIpAddress']['value']
+            source_ip = handle['sourceIpAddress']['value']
             try:
-                sourcePort = int(handle['sourcePort']['value'])
+                source_port = int(handle['sourcePort']['value'])
             except:
                 raise ValueError
-            mbus_client = ModbusTcpClient(host=sourceIP, port=sourcePort)
-            _LOGGER.info('Modbus TCP started on IP %s', sourceIP)
+            mbus_client = ModbusTcpClient(host=source_ip, port=source_port)
+            _LOGGER.info('Modbus TCP started on IP %s', source_ip)
 
         """ TODO: use modbus_map = handle['entitiesMap']['value'] dict to read
         
@@ -183,22 +191,21 @@ def plugin_poll(handle):
         """
 
         # Specify which register number to monitor and how many registers to read
-        registerNumber = 0
-        numberOfRegistersToRead = 1
+        register_number = 0
+        number_of_registers_to_read = 1
 
-        registerValues = mbus_client.read_holding_registers(registerNumber, numberOfRegistersToRead, unit=0)
-        registerVal = registerValues.registers[0]
+        register_values = mbus_client.read_holding_registers(register_number, number_of_registers_to_read, unit=0)
+        register_val = register_values.registers[0]
 
-
-        if registerVal is not None:
-            time_stamp = str(datetime.now(tz=timezone.utc))
+        if register_val is not None:
+            timestamp = str(datetime.now(tz=timezone.utc))
 
             # FIX-ME
-            readings =  {'Register Value': registerVal }
+            readings = {'Register Value': register_val}
 
             wrapper = {
                 'asset': 'Modbus TCP',
-                'timestamp': time_stamp,
+                'timestamp': timestamp,
                 'key': str(uuid.uuid4()),
                 'readings': readings
             }
@@ -210,9 +217,10 @@ def plugin_poll(handle):
 
 
 def plugin_reconfigure(handle, new_config):
-    """ Reconfigures the plugin, it should be called when the configuration of the plugin is changed during the
-        operation of the device service.
-        The new configuration category should be passed.
+    """ Reconfigures the plugin
+
+    it should be called when the configuration of the plugin is changed during the operation of the south service.
+    The new configuration category should be passed.
 
     Args:
         handle: handle returned by the plugin initialisation call
@@ -239,7 +247,9 @@ def plugin_reconfigure(handle, new_config):
 
 
 def plugin_shutdown(handle):
-    """ Shutdowns the plugin doing required cleanup, to be called prior to the device service being shut down.
+    """ Shutdowns the plugin doing required cleanup
+
+    To be called prior to the south service being shut down.
 
     Args:
         handle: handle returned by the plugin initialisation call

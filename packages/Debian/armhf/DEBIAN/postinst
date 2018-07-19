@@ -37,12 +37,11 @@ set_files_ownership () {
 
 add_service () {
     output=$(curl -sX POST http://localhost:8081/foglamp/service -d '{"name": "Modbus TCP", "type": "south", "plugin": "modbustcp", "enabled": true}')
-    echo $output
+    echo ${output}
 }
-
 
 
 install_deps
 set_files_ownership
 add_service
-echo "modbustcp plugin installed."
+echo "Modbus TCP plugin installed."
