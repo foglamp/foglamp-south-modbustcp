@@ -69,7 +69,7 @@ __version__ = "${VERSION}"
 
 _DEFAULT_CONFIG = {
     'plugin': {
-        'description': 'Python module name of the plugin to load',
+        'description': 'Modbus TCP South Service Plugin',
         'type': 'string',
         'default': 'modbustcp'
     },
