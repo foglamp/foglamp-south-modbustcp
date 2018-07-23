@@ -22,6 +22,7 @@
 import copy
 import uuid
 import json
+import logging
 
 from pymodbus3.client.sync import ModbusTcpClient
 
@@ -103,7 +104,7 @@ _DEFAULT_CONFIG = {
 }
 
 
-_LOGGER = logger.setup(__name__)
+_LOGGER = logger.setup(__name__, level=logging.INFO)
 """ Setup the access to the logging system of FogLAMP """
 
 UNIT = 0x0
