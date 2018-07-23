@@ -261,7 +261,7 @@ def plugin_reconfigure(handle, new_config):
         new_handle['restart'] = 'yes'
         _LOGGER.info("Restarting Modbus TCP plugin due to change in configuration keys [{}]".format(', '.join(diff)))
     else:
-        new_handle = copy.deepcopy(handle)
+        new_handle = copy.deepcopy(new_config)
         new_handle['restart'] = 'no'
 
     return new_handle
