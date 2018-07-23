@@ -106,9 +106,8 @@ _DEFAULT_CONFIG = {
 _LOGGER = logger.setup(__name__)
 """ Setup the access to the logging system of FogLAMP """
 
-UNIT = 0xFF
-"""  The slave unit this request is targeting
-On TCP/IP, the MODBUS server is addressed using its IP address; therefore, the MODBUS Unit Identifier is useless. """
+UNIT = 0x0
+"""  The slave unit this request is targeting """
 
 mbus_client = None
 
@@ -181,12 +180,7 @@ def plugin_poll(handle):
             - unit: The slave unit this request is targeting
             
             On TCP/IP, the MODBUS server is addressed using its IP address; therefore, the MODBUS Unit Identifier is useless. 
-            The value 0xFF has to be used. When addressing a MODBUS server connected directly to a TCP/IP network, it’s 
-            recommended not using a significant MODBUS slave address in the "Unit Identifier" field.  
-            In the event of a re-allocation of the IP addresses within an automated system and if a IP address previously
-            assigned to a MODBUS server is then assigned to a gateway, using a significant slave address may cause trouble
-            because of a bad routing by the gateway. Using a non-significant slave address, the gateway will simply discard
-            the MODBUS PDU with no trouble. 0xFF is recommended for the "Unit Identifier" as non-significant value. 
+
             Remark : The value 0 is also accepted to communicate directly to a MODBUS TCP device.
         """
         unit_id = UNIT
@@ -264,7 +258,7 @@ def plugin_reconfigure(handle, new_config):
         plugin_shutdown(handle)
         new_handle = plugin_init(new_config)
         new_handle['restart'] = 'yes'
-        _LOGGER.info("Restarting  Modbus TCP plugin due to change in configuration keys [{}]".format(', '.join(diff)))
+        _LOGGER.info("Restarting Modbus TCP plugin due to change in configuration keys [{}]".format(', '.join(diff)))
     else:
         new_handle = copy.deepcopy(handle)
         new_handle['restart'] = 'no'
