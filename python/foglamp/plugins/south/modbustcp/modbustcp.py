@@ -4,7 +4,7 @@
 # See: http://foglamp.readthedocs.io/
 # FOGLAMP_END
 
-"""
+
 # ***********************************************************************
 # * DISCLAIMER:
 # *
@@ -17,7 +17,17 @@
 # * THE IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY
 # * AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY DISCLAIMED.
 # ************************************************************************
-"""
+
+
+import copy
+import uuid
+import json
+
+from pymodbus3.client.sync import ModbusTcpClient
+
+from foglamp.common import logger
+from foglamp.plugins.common import utils
+from foglamp.services.south import exceptions
 
 """ Plugin for reading data from a Modbus TCP data source
 
@@ -38,20 +48,9 @@
         print(value)
         client.close()
 
-    """
+"""
 
-import copy
-from datetime import datetime, timezone
-import uuid
-import json
-
-from pymodbus3.client.sync import ModbusTcpClient
-
-from foglamp.common import logger
-from foglamp.plugins.common import utils
-from foglamp.services.south import exceptions
-
-__author__ = "Dan Lopez"
+__author__ = "Dan Lopez, Praveen Garg"
 __copyright__ = "Copyright (c) 2018 OSIsoft, LLC"
 __license__ = "Apache 2.0"
 __version__ = "${VERSION}"
@@ -78,13 +77,13 @@ _DEFAULT_CONFIG = {
         'type': 'integer',
         'default': '1000'
     },
-    'sourceIpAddress': {
-        'description': 'The IP address of the Modbus TCP data source',
+    'address': {
+        'description': 'Address of Modbus TCP server',
         'type': 'string',
         'default': '127.0.0.1'
     },
-    'sourcePort': {
-        'description': 'The port of the Modbus TCP data source',
+    'port': {
+        'description': 'Port of Modbus TCP server',
         'type': 'integer',
         'default': '502'
     },
@@ -106,6 +105,10 @@ _DEFAULT_CONFIG = {
 
 _LOGGER = logger.setup(__name__)
 """ Setup the access to the logging system of FogLAMP """
+
+UNIT = 0xFF
+"""  The slave unit this request is targeting
+On TCP/IP, the MODBUS server is addressed using its IP address; therefore, the MODBUS Unit Identifier is useless. """
 
 mbus_client = None
 
@@ -158,16 +161,16 @@ def plugin_poll(handle):
     try:
         global mbus_client
         if mbus_client is None:
-            source_ip = handle['sourceIpAddress']['value']
             try:
-                source_port = int(handle['sourcePort']['value'])
+                source_address = handle['address']['value']
+                source_port = int(handle['port']['value'])
             except:
                 raise ValueError
-            mbus_client = ModbusTcpClient(host=source_ip, port=source_port)
-            _LOGGER.info('Modbus TCP started on IP %s', source_ip)
 
-        """ TODO: use modbus_map = handle['entitiesMap']['value'] dict to read
-        
+            mbus_client = ModbusTcpClient(host=source_address, port=source_port)
+            _LOGGER.info('Modbus TCP Client is connected: %s, %s:%d', mbus_client.connect(), source_address, source_port)
+
+        """ 
         read_coils(self, address, count=1, **kwargs)  
         read_discrete_inputs(self, address, count=1, **kwargs)
         read_holding_registers(self, address, count=1, **kwargs)
@@ -184,31 +187,54 @@ def plugin_poll(handle):
             assigned to a MODBUS server is then assigned to a gateway, using a significant slave address may cause trouble
             because of a bad routing by the gateway. Using a non-significant slave address, the gateway will simply discard
             the MODBUS PDU with no trouble. 0xFF is recommended for the "Unit Identifier" as non-significant value. 
-            
             Remark : The value 0 is also accepted to communicate directly to a MODBUS TCP device.
-. 
-       
         """
+        unit_id = UNIT
+        modbus_map = json.loads(handle['entitiesMap']['value'])
 
-        # Specify which register number to monitor and how many registers to read
-        register_number = 0
-        number_of_registers_to_read = 1
+        readings = {}
 
-        register_values = mbus_client.read_holding_registers(register_number, number_of_registers_to_read, unit=0)
-        register_val = register_values.registers[0]
+        # Read coils
+        coils_address_info = modbus_map['coils']
 
-        if register_val is not None:
-            timestamp = str(datetime.now(tz=timezone.utc))
+        if len(coils_address_info) > 0:
+            for k, address in coils_address_info.items():
+                coil_bit_values = mbus_client.read_coils(99 + int(address), 1, unit=unit_id)
+                readings.update({k: coil_bit_values.bits[0]})
 
-            # FIX-ME
-            readings = {'Register Value': register_val}
 
-            wrapper = {
-                'asset': 'Modbus TCP',
-                'timestamp': timestamp,
-                'key': str(uuid.uuid4()),
-                'readings': readings
-            }
+        # Discrete input
+        discrete_input_info = modbus_map['discreteInputs']
+
+        if len(discrete_input_info) > 0:
+            for k, address in discrete_input_info.items():
+                read_discrete_inputs = mbus_client.read_discrete_inputs(99 + int(address), 1, unit=unit_id)
+                readings.update({ k :  read_discrete_inputs.bits[0]})
+
+
+        # Holding registers
+        holding_registers_info = modbus_map['holdingRegisters']
+
+        if len(holding_registers_info) > 0:
+            for k, address in holding_registers_info.items():
+                register_values = mbus_client.read_holding_registers(99 + int(address), 1, unit=unit_id)
+                readings.update({ k : register_values.registers[0]})
+
+
+        # Read input registers
+        input_registers_info = modbus_map['inputRegisters']
+
+        if len(input_registers_info) > 0:
+            for k, address in input_registers_info.items():
+                read_input_reg = mbus_client.read_input_registers(99 + int(address), 1, unit=unit_id)
+                readings.update({ k : read_input_reg.registers[0] })
+
+        wrapper = {
+            'asset': 'Modbus TCP',
+            'timestamp': utils.local_timestamp(),
+            'key': str(uuid.uuid4()),
+            'readings': readings
+        }
 
     except Exception as ex:
         raise exceptions.DataRetrievalError(ex)
@@ -234,7 +260,7 @@ def plugin_reconfigure(handle, new_config):
 
     diff = utils.get_diff(handle, new_config)
 
-    if 'sourceIpAddress' in diff or 'sourcePort' in diff or 'management_host' in diff:
+    if 'address' in diff or 'port' in diff or 'management_host' in diff:
         plugin_shutdown(handle)
         new_handle = plugin_init(new_config)
         new_handle['restart'] = 'yes'
