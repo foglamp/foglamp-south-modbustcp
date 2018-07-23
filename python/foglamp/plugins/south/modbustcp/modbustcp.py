@@ -277,12 +277,14 @@ def plugin_shutdown(handle):
     Returns:
     Raises:
     """
+    global mbus_client
     try:
-        global mbus_client
         if mbus_client is not None:
             mbus_client.close()
+            _LOGGER.info('Modbus TCP client connection closed.')
     except Exception as ex:
         _LOGGER.exception('Error in shutting down Modbus TCP plugin; %s', ex)
         raise
     else:
+        mbus_client = None
         _LOGGER.info('Modbus TCP plugin shut down.')
