@@ -89,7 +89,7 @@ _DEFAULT_CONFIG = {
         'default': '502'
     },
     'map': {
-        'description': 'Modbus entities map',
+        'description': 'Modbus register map',
         'type': 'JSON',
         'default': json.dumps({
             "coils": {},
