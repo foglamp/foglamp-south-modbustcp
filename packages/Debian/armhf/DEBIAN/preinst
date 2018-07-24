@@ -49,4 +49,3 @@ then
     echo "*** ERROR. FogLAMP is currently not running. Start FogLAMP and try again. ***"
     exit 1
 fi
-

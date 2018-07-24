@@ -88,13 +88,13 @@ _DEFAULT_CONFIG = {
         'type': 'integer',
         'default': '502'
     },
-    'entitiesMap': {
+    'map': {
         'description': 'Modbus entities map',
         'type': 'JSON',
         'default': json.dumps({
             "coils": {},
-            "discreteInputs": {},
-            "holdingRegisters": {
+            "inputs": {},
+            "registers": {
                 "temperature": 7,
                 "humidity": 8
             },
@@ -145,7 +145,7 @@ def plugin_init(config):
 
 
 def plugin_poll(handle):
-    """ Extracts data from the modbus device and returns it in a JSON document as a Python dict.
+    """ Poll readings from the modbus device and returns it in a JSON document as a Python dict.
 
     Available for poll mode only.
 
@@ -185,7 +185,7 @@ def plugin_poll(handle):
             Remark : The value 0 is also accepted to communicate directly to a MODBUS TCP device.
         """
         unit_id = UNIT
-        modbus_map = json.loads(handle['entitiesMap']['value'])
+        modbus_map = json.loads(handle['map']['value'])
 
         readings = {}
 
@@ -197,24 +197,21 @@ def plugin_poll(handle):
                 coil_bit_values = mbus_client.read_coils(99 + int(address), 1, unit=unit_id)
                 readings.update({k: coil_bit_values.bits[0]})
 
-
         # Discrete input
-        discrete_input_info = modbus_map['discreteInputs']
+        discrete_input_info = modbus_map['inputs']
 
         if len(discrete_input_info) > 0:
             for k, address in discrete_input_info.items():
                 read_discrete_inputs = mbus_client.read_discrete_inputs(99 + int(address), 1, unit=unit_id)
-                readings.update({ k :  read_discrete_inputs.bits[0]})
-
+                readings.update({k:  read_discrete_inputs.bits[0]})
 
         # Holding registers
-        holding_registers_info = modbus_map['holdingRegisters']
+        holding_registers_info = modbus_map['registers']
 
         if len(holding_registers_info) > 0:
             for k, address in holding_registers_info.items():
                 register_values = mbus_client.read_holding_registers(99 + int(address), 1, unit=unit_id)
-                readings.update({ k : register_values.registers[0]})
-
+                readings.update({k: register_values.registers[0]})
 
         # Read input registers
         input_registers_info = modbus_map['inputRegisters']
@@ -222,7 +219,7 @@ def plugin_poll(handle):
         if len(input_registers_info) > 0:
             for k, address in input_registers_info.items():
                 read_input_reg = mbus_client.read_input_registers(99 + int(address), 1, unit=unit_id)
-                readings.update({ k : read_input_reg.registers[0] })
+                readings.update({k: read_input_reg.registers[0] })
 
         wrapper = {
             'asset': 'Modbus TCP',
