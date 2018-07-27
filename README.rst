@@ -5,7 +5,6 @@ foglamp-south-modbustcp
 FogLAMP South Plugin for Modbus TCP
 
 
-
 Installation
 ============
 
@@ -52,6 +51,7 @@ Check the newly installed package:
 .. code-block:: console
 
   $ sudo dpkg -l | grep foglamp-south-modbustcp
+  ii  foglamp-south-modbustcp    1.3.0    armhf    South plugin for the modbustcp
 
 
 Check foglamp service status for foglamp-south-modbustcp, it should list it as a south service:
@@ -63,5 +63,5 @@ Check foglamp service status for foglamp-south-modbustcp, it should list it as a
   ...
   CGroup: /system.slice/foglamp.service
            |- ....
-           └─python3 -m foglamp.services.south --port=43927 --address=127.0.0.1 --name=modbustcp
-
+           ├─/bin/sh services/south --port= --address=127.0.0.1 --name=Modbus TCP
+           └─python3 -m foglamp.services.south --port= --address=127.0.0.1 --name=Modbus TCP
