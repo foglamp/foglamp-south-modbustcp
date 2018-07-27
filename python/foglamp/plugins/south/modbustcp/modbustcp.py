@@ -252,7 +252,7 @@ def plugin_reconfigure(handle, new_config):
 
     diff = utils.get_diff(handle, new_config)
 
-    if 'address' in diff or 'port' in diff or 'management_host' in diff:
+    if 'address' in diff or 'port' in diff or 'local_services' in diff:
         plugin_shutdown(handle)
         new_handle = plugin_init(new_config)
         new_handle['restart'] = 'yes'
