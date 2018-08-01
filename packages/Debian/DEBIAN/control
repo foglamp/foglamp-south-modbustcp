@@ -2,7 +2,7 @@ Package: foglamp-south-modbustcp
 Version: 0.0.0
 Section: devel
 Priority: optional
-Architecture: amd64
+Architecture: all
 Depends: foglamp
 Conflicts:
 Maintainer: Dianomic Systems, Inc. <info@dianomic.com>
