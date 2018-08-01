@@ -15,16 +15,15 @@ Create Debian Package
 .. code-block:: console
 
     $ ./make_deb help
-    make_deb {arm|x86} [clean|cleanall]
+    make_deb help [clean|cleanall]
     This script is used to create the Debian package of foglamp modbustcp
 
     Arguments:
-     arm      - Build an armv7l package
-     x86      - Build an x86_64 package
+     help     - Display this help text
      clean    - Remove all the old versions saved in format .XXXX
      cleanall - Remove all the versions, including the last one
 
-``./make_deb arm`` will create the debian package inside ``packages/Debian/build/``.
+``./make_deb`` will create the debian package inside ``packages/build/``.
 
 
 Install Debian Package
@@ -42,8 +41,8 @@ i.e. ``/var/cache/apt/archives``.
 
 .. code-block:: console
 
-  $ sudo cp foglamp-south-modbustcp-1.3.0-armhf.deb /var/cache/apt/archives/.
-  $ sudo apt install /var/cache/apt/archives/foglamp-south-modbustcp-1.3.0-armhf.deb
+  $ sudo cp foglamp-south-modbustcp-1.3.0.deb /var/cache/apt/archives/.
+  $ sudo apt install /var/cache/apt/archives/foglamp-south-modbustcp-1.3.0.deb
 
 
 Check the newly installed package:
@@ -51,7 +50,7 @@ Check the newly installed package:
 .. code-block:: console
 
   $ sudo dpkg -l | grep foglamp-south-modbustcp
-  ii  foglamp-south-modbustcp    1.3.0    armhf    South plugin for the modbustcp
+  ii  foglamp-south-modbustcp    1.3.0    all    South plugin for the modbustcp
 
 
 Check foglamp service status for foglamp-south-modbustcp, it should list it as a south service:
