@@ -18,35 +18,30 @@
 
 ##--------------------------------------------------------------------
 ##
-## @preinst DEBIAN/preinst
+## @postinst DEBIAN/postinst
 ## This script is used to execute post installation tasks.
 ##
-## Author: Ivan Zoratti, Ashwin Gopalakrishnan
+## Author: Praveen Garg
 ##
 ##--------------------------------------------------------------------
 
 set -e
-get_foglamp_script () {
-    foglamp_script=$(dpkg -L foglamp | grep 'foglamp/bin/foglamp$')
-    echo $foglamp_script
+
+install_deps () {
+    pip3 install -Ir /usr/local/foglamp/python/requirements-modbustcp.txt --no-cache-dir
 }
 
-is_foglamp_running () {
-    set +e
-    foglamp_script=$(get_foglamp_script)
-    foglamp_status_output=$($foglamp_script status 2>&1 | grep 'FogLAMP Uptime')
-    rc=$((!$?))
-    echo $rc
-    set -e
+set_files_ownership () {
+    chown -R root:root /usr/local/foglamp/python/foglamp/plugins/south/modbustcp
 }
 
-# main
+add_service () {
+    output=$(curl -sX POST http://localhost:8081/foglamp/service -d '{"name": "Modbus TCP", "type": "south", "plugin": "modbustcp", "enabled": true}')
+    echo ${output}
+}
 
-# exit if foglamp is not running
-IS_FOGLAMP_RUNNING=$(is_foglamp_running)
-if [ "$IS_FOGLAMP_RUNNING" -eq "0" ]
-then
-    echo "*** ERROR. FogLAMP is currently not running. Start FogLAMP and try again. ***"
-    exit 1
-fi
 
+install_deps
+set_files_ownership
+add_service
+echo "Modbus TCP plugin installed."
