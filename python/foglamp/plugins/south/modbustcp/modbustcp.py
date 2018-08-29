@@ -74,8 +74,8 @@ _DEFAULT_CONFIG = {
         'default': 'modbustcp',
         'readonly': 'true'
     },
-    'assetNamePrefix': {
-        'description': 'Asset prefix',
+    'assetName': {
+        'description': 'Asset name',
         'type': 'string',
         'default': 'Modbus TCP',
         'order': "1"
@@ -233,7 +233,7 @@ def plugin_poll(handle):
                 readings.update({k: read_input_reg.registers[0] })
 
         wrapper = {
-            'asset': handle['assetNamePrefix']['value'],
+            'asset': handle['assetName']['value'],
             'timestamp': utils.local_timestamp(),
             'key': str(uuid.uuid4()),
             'readings': readings
