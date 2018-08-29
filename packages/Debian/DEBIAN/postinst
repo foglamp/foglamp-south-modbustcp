@@ -35,13 +35,6 @@ set_files_ownership () {
     chown -R root:root /usr/local/foglamp/python/foglamp/plugins/south/modbustcp
 }
 
-add_service () {
-    output=$(curl -sX POST http://localhost:8081/foglamp/service -d '{"name": "Modbus TCP", "type": "south", "plugin": "modbustcp", "enabled": true}')
-    echo ${output}
-}
-
-
 install_deps
 set_files_ownership
-add_service
 echo "Modbus TCP plugin installed."

@@ -71,22 +71,32 @@ _DEFAULT_CONFIG = {
     'plugin': {
         'description': 'Modbus TCP South Service Plugin',
         'type': 'string',
-        'default': 'modbustcp'
+        'default': 'modbustcp',
+        'readonly': 'true'
+    },
+    'assetName': {
+        'description': 'Asset name',
+        'type': 'string',
+        'default': 'Modbus TCP',
+        'order': "1"
     },
     'pollInterval': {
         'description': 'The interval between poll calls to the device poll routine, expressed in milliseconds.',
         'type': 'integer',
-        'default': '1000'
+        'default': '1000',
+        'order': '2'
     },
     'address': {
         'description': 'Address of Modbus TCP server',
         'type': 'string',
-        'default': '127.0.0.1'
+        'default': '127.0.0.1',
+        'order': '3'
     },
     'port': {
         'description': 'Port of Modbus TCP server',
         'type': 'integer',
-        'default': '502'
+        'default': '502',
+        'order': '4'
     },
     'map': {
         'description': 'Modbus register map',
@@ -99,7 +109,8 @@ _DEFAULT_CONFIG = {
                 "humidity": 8
             },
             "inputRegisters": {}
-        })
+        }),
+        'order': '5'
     }
 }
 
@@ -222,7 +233,7 @@ def plugin_poll(handle):
                 readings.update({k: read_input_reg.registers[0] })
 
         wrapper = {
-            'asset': 'Modbus TCP',
+            'asset': handle['assetName']['value'],
             'timestamp': utils.local_timestamp(),
             'key': str(uuid.uuid4()),
             'readings': readings
