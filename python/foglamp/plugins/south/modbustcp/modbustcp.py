@@ -78,25 +78,29 @@ _DEFAULT_CONFIG = {
         'description': 'Asset name',
         'type': 'string',
         'default': 'Modbus TCP',
-        'order': "1"
+        'order': "1",
+        'displayName': 'Asset Name'
     },
     'pollInterval': {
         'description': 'The interval between poll calls to the device poll routine, expressed in milliseconds.',
         'type': 'integer',
         'default': '1000',
-        'order': '2'
+        'order': '2',
+        'displayName': 'Poll Interval'
     },
     'address': {
         'description': 'Address of Modbus TCP server',
         'type': 'string',
         'default': '127.0.0.1',
-        'order': '3'
+        'order': '3',
+        'displayName': 'Address'
     },
     'port': {
         'description': 'Port of Modbus TCP server',
         'type': 'integer',
         'default': '502',
-        'order': '4'
+        'order': '4',
+        'displayName': 'Port'
     },
     'map': {
         'description': 'Modbus register map',
@@ -110,7 +114,8 @@ _DEFAULT_CONFIG = {
             },
             "inputRegisters": {}
         }),
-        'order': '5'
+        'order': '5',
+        'displayName': 'Register Map'
     }
 }
 
