@@ -93,7 +93,7 @@ _DEFAULT_CONFIG = {
         'type': 'string',
         'default': '127.0.0.1',
         'order': '3',
-        'displayName': 'Address'
+        'displayName': 'TCP Server Address'
     },
     'port': {
         'description': 'Port of Modbus TCP server',
