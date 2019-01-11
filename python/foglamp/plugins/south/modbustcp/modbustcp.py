@@ -81,13 +81,6 @@ _DEFAULT_CONFIG = {
         'order': "1",
         'displayName': 'Asset Name'
     },
-    'pollInterval': {
-        'description': 'The interval between poll calls to the device poll routine, expressed in milliseconds.',
-        'type': 'integer',
-        'default': '1000',
-        'order': '2',
-        'displayName': 'Poll Interval'
-    },
     'address': {
         'description': 'Address of Modbus TCP server',
         'type': 'string',
@@ -271,11 +264,9 @@ def plugin_reconfigure(handle, new_config):
     if 'address' in diff or 'port' in diff:
         plugin_shutdown(handle)
         new_handle = plugin_init(new_config)
-        new_handle['restart'] = 'yes'
         _LOGGER.info("Restarting Modbus TCP plugin due to change in configuration keys [{}]".format(', '.join(diff)))
     else:
         new_handle = copy.deepcopy(new_config)
-        new_handle['restart'] = 'no'
 
     return new_handle
 
