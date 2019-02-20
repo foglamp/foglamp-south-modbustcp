@@ -133,7 +133,7 @@ def plugin_info():
 
     return {
         'name': 'Modbus TCP',
-        'version': '1.3.0',
+        'version': '1.5.0',
         'mode': 'poll',
         'type': 'south',
         'interface': '1.0',
@@ -175,9 +175,13 @@ def plugin_poll(handle):
                 source_port = int(handle['port']['value'])
             except:
                 raise ValueError
-
-            mbus_client = ModbusTcpClient(host=source_address, port=source_port)
-            _LOGGER.info('Modbus TCP Client is connected: %s, %s:%d', mbus_client.connect(), source_address, source_port)
+            try:
+                mbus_client = ModbusTcpClient(host=source_address, port=source_port)
+            except:
+                _LOGGER.warn('Failed to connect! Modbus TCP host %s on port %d', source_address, source_port)
+                return
+            else:
+                _LOGGER.info('Modbus TCP Client is connected: %s, %s:%d', mbus_client.connect(), source_address, source_port)
 
         """ 
         read_coils(self, address, count=1, **kwargs)  
@@ -238,7 +242,8 @@ def plugin_poll(handle):
         }
 
     except Exception as ex:
-        raise exceptions.DataRetrievalError(ex)
+        _LOGGER.error('Failed to read data from modbus device. Got error %s', str(ex))
+        raise ex
     else:
         return wrapper
 
@@ -287,7 +292,7 @@ def plugin_shutdown(handle):
             mbus_client.close()
             _LOGGER.info('Modbus TCP client connection closed.')
     except Exception as ex:
-        _LOGGER.exception('Error in shutting down Modbus TCP plugin; %s', ex)
+        _LOGGER.exception('Error in shutting down Modbus TCP plugin; %s', str(ex))
         raise
     else:
         mbus_client = None
