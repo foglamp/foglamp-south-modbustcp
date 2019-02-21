@@ -179,9 +179,9 @@ def plugin_poll(handle):
                 raise ValueError(e_msg)
             try:
                 mbus_client = ModbusTcpClient(host=source_address, port=source_port)
-            except Exception as ex:
+            except:
                 _LOGGER.warn('Failed to connect! Modbus TCP host %s on port %d', source_address, source_port)
-                return ex
+                return
             else:
                 _LOGGER.info('Modbus TCP Client is connected: %s, %s:%d', mbus_client.connect(), source_address, source_port)
 
