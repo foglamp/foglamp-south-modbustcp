@@ -173,13 +173,15 @@ def plugin_poll(handle):
             try:
                 source_address = handle['address']['value']
                 source_port = int(handle['port']['value'])
-            except:
-                raise ValueError
+            except Exception as ex:
+                e_msg = 'Failed to parse Modbus TCP address and / or port configuration.'
+                _LOGGER.error('%s %s', e_msg, str(ex))
+                raise ValueError(e_msg)
             try:
                 mbus_client = ModbusTcpClient(host=source_address, port=source_port)
-            except:
+            except Exception as ex:
                 _LOGGER.warn('Failed to connect! Modbus TCP host %s on port %d', source_address, source_port)
-                return
+                return ex
             else:
                 _LOGGER.info('Modbus TCP Client is connected: %s, %s:%d', mbus_client.connect(), source_address, source_port)
 
@@ -293,7 +295,7 @@ def plugin_shutdown(handle):
             _LOGGER.info('Modbus TCP client connection closed.')
     except Exception as ex:
         _LOGGER.exception('Error in shutting down Modbus TCP plugin; %s', str(ex))
-        raise
+        raise ex
     else:
         mbus_client = None
         _LOGGER.info('Modbus TCP plugin shut down.')
