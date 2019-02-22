@@ -71,22 +71,29 @@ _DEFAULT_CONFIG = {
     'plugin': {
         'description': 'Modbus TCP South Service Plugin',
         'type': 'string',
-        'default': 'modbustcp'
+        'default': 'modbustcp',
+        'readonly': 'true'
     },
-    'pollInterval': {
-        'description': 'The interval between poll calls to the device poll routine, expressed in milliseconds.',
-        'type': 'integer',
-        'default': '1000'
+    'assetName': {
+        'description': 'Asset name',
+        'type': 'string',
+        'default': 'Modbus TCP',
+        'order': "1",
+        'displayName': 'Asset Name'
     },
     'address': {
         'description': 'Address of Modbus TCP server',
         'type': 'string',
-        'default': '127.0.0.1'
+        'default': '127.0.0.1',
+        'order': '3',
+        'displayName': 'TCP Server Address'
     },
     'port': {
         'description': 'Port of Modbus TCP server',
         'type': 'integer',
-        'default': '502'
+        'default': '502',
+        'order': '4',
+        'displayName': 'Port'
     },
     'map': {
         'description': 'Modbus register map',
@@ -99,7 +106,9 @@ _DEFAULT_CONFIG = {
                 "humidity": 8
             },
             "inputRegisters": {}
-        })
+        }),
+        'order': '5',
+        'displayName': 'Register Map'
     }
 }
 
@@ -124,7 +133,7 @@ def plugin_info():
 
     return {
         'name': 'Modbus TCP',
-        'version': '1.3.0',
+        'version': '1.5.0',
         'mode': 'poll',
         'type': 'south',
         'interface': '1.0',
@@ -222,7 +231,7 @@ def plugin_poll(handle):
                 readings.update({k: read_input_reg.registers[0] })
 
         wrapper = {
-            'asset': 'Modbus TCP',
+            'asset': handle['assetName']['value'],
             'timestamp': utils.local_timestamp(),
             'key': str(uuid.uuid4()),
             'readings': readings
@@ -255,11 +264,9 @@ def plugin_reconfigure(handle, new_config):
     if 'address' in diff or 'port' in diff:
         plugin_shutdown(handle)
         new_handle = plugin_init(new_config)
-        new_handle['restart'] = 'yes'
         _LOGGER.info("Restarting Modbus TCP plugin due to change in configuration keys [{}]".format(', '.join(diff)))
     else:
         new_handle = copy.deepcopy(new_config)
-        new_handle['restart'] = 'no'
 
     return new_handle
 
