@@ -60,7 +60,7 @@ __version__ = "${VERSION}"
 """ _DEFAULT_CONFIG with Modbus Entities Map
 
     The coils and registers each have a read-only table and read-write table.
-
+    
         Coil	Read-write	1 bit
         Discrete input	Read-only	1 bit
         Input register	Read-only	16 bits
@@ -164,7 +164,6 @@ def plugin_poll(handle):
         returns a reading in a JSON document, as a Python dict, if it is available
         None - If no reading is available
     Raises:
-        DataRetrievalError
     """
 
     try:
@@ -206,7 +205,6 @@ def plugin_poll(handle):
 
         # Read coils
         coils_address_info = modbus_map['coils']
-
         if len(coils_address_info) > 0:
             for k, address in coils_address_info.items():
                 coil_bit_values = mbus_client.read_coils(99 + int(address), 1, unit=unit_id)
@@ -214,7 +212,6 @@ def plugin_poll(handle):
 
         # Discrete input
         discrete_input_info = modbus_map['inputs']
-
         if len(discrete_input_info) > 0:
             for k, address in discrete_input_info.items():
                 read_discrete_inputs = mbus_client.read_discrete_inputs(99 + int(address), 1, unit=unit_id)
@@ -222,7 +219,6 @@ def plugin_poll(handle):
 
         # Holding registers
         holding_registers_info = modbus_map['registers']
-
         if len(holding_registers_info) > 0:
             for k, address in holding_registers_info.items():
                 register_values = mbus_client.read_holding_registers(99 + int(address), 1, unit=unit_id)
@@ -230,7 +226,6 @@ def plugin_poll(handle):
 
         # Read input registers
         input_registers_info = modbus_map['inputRegisters']
-
         if len(input_registers_info) > 0:
             for k, address in input_registers_info.items():
                 read_input_reg = mbus_client.read_input_registers(99 + int(address), 1, unit=unit_id)
