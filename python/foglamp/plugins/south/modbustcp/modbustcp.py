@@ -180,8 +180,7 @@ def plugin_poll(handle):
                 mbus_client = ModbusTcpClient(host=source_address, port=source_port)
                 mbus_client_connected = mbus_client.connect()
                 if mbus_client_connected:
-                    _LOGGER.info('Modbus TCP Client is connected: %s, %s:%d', mbus_client.connect(), source_address,
-                                 source_port)
+                    _LOGGER.info('Modbus TCP Client is connected. %s:%d', source_address, source_port)
                 else:
                     raise RuntimeError("Modbus TCP Connection failed!")
             except:
