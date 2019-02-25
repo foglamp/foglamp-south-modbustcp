@@ -178,11 +178,16 @@ def plugin_poll(handle):
                 raise ValueError(e_msg)
             try:
                 mbus_client = ModbusTcpClient(host=source_address, port=source_port)
+                mbus_client_connected = mbus_client.connect()
+                if mbus_client_connected:
+                    _LOGGER.info('Modbus TCP Client is connected: %s, %s:%d', mbus_client.connect(), source_address,
+                                 source_port)
+                else:
+                    raise RuntimeError("Modbus TCP Connection failed!")
             except:
+                mbus_client = None
                 _LOGGER.warn('Failed to connect! Modbus TCP host %s on port %d', source_address, source_port)
                 return
-            else:
-                _LOGGER.info('Modbus TCP Client is connected: %s, %s:%d', mbus_client.connect(), source_address, source_port)
 
         """ 
         read_coils(self, address, count=1, **kwargs)  
