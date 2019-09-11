@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# FOGLAMP_BEGIN
-# See: http://foglamp.readthedocs.io/
-# FOGLAMP_END
+# FLEDGE_BEGIN
+# See: http://fledge.readthedocs.io/
+# FLEDGE_END
 
 
 # ***********************************************************************
@@ -26,9 +26,9 @@ import logging
 
 from pymodbus3.client.sync import ModbusTcpClient
 
-from foglamp.common import logger
-from foglamp.plugins.common import utils
-from foglamp.services.south import exceptions
+from fledge.common import logger
+from fledge.plugins.common import utils
+from fledge.services.south import exceptions
 
 """ Plugin for reading data from a Modbus TCP data source
 
@@ -114,7 +114,7 @@ _DEFAULT_CONFIG = {
 
 
 _LOGGER = logger.setup(__name__, level=logging.INFO)
-""" Setup the access to the logging system of FogLAMP """
+""" Setup the access to the logging system of Fledge """
 
 UNIT = 0x0
 """  The slave unit this request is targeting """

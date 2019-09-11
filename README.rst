@@ -1,5 +1,5 @@
 =======================
-foglamp-south-modbustcp
+fledge-south-modbustcp
 =======================
 
-FogLAMP South Plugin for Modbus TCP
+Fledge South Plugin for Modbus TCP
