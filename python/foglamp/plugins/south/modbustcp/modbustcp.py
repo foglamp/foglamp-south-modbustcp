@@ -20,7 +20,6 @@
 
 
 import copy
-import uuid
 import json
 import logging
 
@@ -238,7 +237,6 @@ def plugin_poll(handle):
         wrapper = {
             'asset': handle['assetName']['value'],
             'timestamp': utils.local_timestamp(),
-            'key': str(uuid.uuid4()),
             'readings': readings
         }
 
